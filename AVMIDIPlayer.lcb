@@ -20,7 +20,8 @@ private foreign handler objC_AVMIDIPlayerAlloc() returns ObjcRetainedId binds to
 private foreign handler objC_AVMIDIPlayer(in pAVMIDIPlayerInstance as ObjcRetainedId, in pFileNSURL as ObjcId, in pSoundFontNSURL as ObjcId, out pNSError as ObjcId) returns ObjcRetainedId binds to "objc:AVMIDIPlayer.-initWithContentsOfURL:soundBankURL:error:"
 private foreign handler objC_AVMIDIPlayerPrepare(in pAVPlayerRef as ObjcRetainedId) returns nothing binds to "objc:AVMIDIPlayer.-prepareToPlay"
 private foreign handler objC_AVMIDIPlayerPlay(in pAVPlayerRef as ObjcRetainedId, in pAVPlayDone as optional pointer) returns nothing binds to "objc:AVMIDIPlayer.-play:"
-private foreign handler objC_AVMIDIPlayerStop(in pAVPlayerRef as ObjcRetainedId) returns nothing binds to "objc:AVMIDIPlayer.-stop:"
+private foreign handler objC_AVMIDIPlayerStop(in pAVPlayerRef as ObjcRetainedId) returns nothing binds to "objc:AVMIDIPlayer.-stop"
+private foreign handler objC_AVMIDIPlayerPlaying(in pAVPlayerRef as ObjcRetainedId) returns CBool binds to "objc:AVMIDIPlayer.isPlaying"
 
 --------------------- Public handler:
 
@@ -33,11 +34,12 @@ public handler macAVMIDIPlayer(in pFileURL as String, in pSoundFontURL as String
 		variable tSoundFontNSURL as ObjcObject
 		--- need NSError object to pass to AVMIDIplayer
 		variable tNSError as optional ObjcObject
-
 		variable tAVMIDIPlayerCompletionHandler as optional pointer
 	unsafe
 		put objC_NSURLURLwithString(StringToNSString(pFileURL)) into tFileNSURL
 		put objC_NSURLURLwithString(StringToNSString(pSoundFontURL)) into tSoundFontNSURL
+     -- NEED to Add Checking for validity of URLs or the LC Engine will crash when it passes an invalid URL to AVMIDIPlayer!!!
+
 		-- put objC_NSErrorAlloc() into tNSError
 
     	put objC_AVMIDIPlayerAlloc() into mAVMIDIPlayerInstance
@@ -45,7 +47,18 @@ public handler macAVMIDIPlayer(in pFileURL as String, in pSoundFontURL as String
 		objC_AVMIDIPlayerPrepare(mAVMIDIPlayerInstance)
 		objC_AVMIDIPlayerPlay(mAVMIDIPlayerInstance, tAVMIDIPlayerCompletionHandler)
 	end unsafe
+end handler
 
+public handler macAVMIDIPlayerStop() returns nothing
+	unsafe
+		objC_AVMIDIPlayerStop(mAVMIDIPlayerInstance)
+	end unsafe
+end handler
+
+public handler macAVMIDIPlayerIsPlaying() returns Boolean
+	unsafe
+	return objC_AVMIDIPlayerPlaying(mAVMIDIPlayerInstance)
+	end unsafe
 end handler
 
 end library
