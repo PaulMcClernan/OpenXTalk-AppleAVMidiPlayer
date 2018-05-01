@@ -79,7 +79,6 @@ public handler macAVMIDIPlayerCurrentPosition() returns String
 	unsafe
 	put objC_AVMIDIPlayerCurrentPosition(mAVMIDIPlayerInstance) into tCurrentPosition
 	-- put objC_AVMIDIPlayerCurrentPosition(mAVMIDIPlayerInstance,tNewPosition) into tCurrentPosition
-	-- put objC_AVMIDIPlayerInfo(mAVMIDIPlayerInstance,StringToNSString("currentPosition")) into tCurrentPosition
     return tCurrentPosition formatted as string
 	end unsafe
 end handler
