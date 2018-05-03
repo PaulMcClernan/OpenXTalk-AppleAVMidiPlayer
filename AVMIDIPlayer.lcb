@@ -1,4 +1,4 @@
-library community.macavmidiplay.paulmcclernan
+library community.avmidiplay.paulmcclernan
 
 use com.livecode.foreign
 use com.livecode.objc
