@@ -2,10 +2,7 @@ library community.macavmidiplay.paulmcclernan
 
 use com.livecode.foreign
 use com.livecode.objc
-use com.livecode.widget
-use com.livecode.canvas
 use com.livecode.engine
-use com.livecode.library.widgetutils
 
 metadata version is "1.0.0"
 metadata author is "Paul McClernan"
@@ -22,13 +19,13 @@ private foreign handler objC_AVMIDIPlayerPrepare(in pAVPlayerRef as ObjcRetained
 private foreign handler objC_AVMIDIPlayerPlay(in pAVPlayerRef as ObjcRetainedId, in pAVPlayDone as optional pointer) returns nothing binds to "objc:AVMIDIPlayer.-play:"
 private foreign handler objC_AVMIDIPlayerStop(in pAVPlayerRef as ObjcRetainedId) returns nothing binds to "objc:AVMIDIPlayer.-stop"
 private foreign handler objC_AVMIDIPlayerPlaying(in pAVPlayerRef as ObjcRetainedId) returns CBool binds to "objc:AVMIDIPlayer.isPlaying"
+private foreign handler objC_AVMIDIPlayerRate(in pAVPlayerRef as ObjcRetainedId, in pRate as ObjcId) returns nothing binds to "objc:AVMIDIPlayer.rate"
 private foreign handler objC_AVMIDIPlayerDuration(in pAVPlayerRef as ObjcRetainedId) returns NaturalFloat binds to "objc:AVMIDIPlayer.duration"
 private foreign handler objC_AVMIDIPlayerCurrentPosition(in pAVPlayerRef as ObjcRetainedId) returns NaturalFloat binds to "objc:AVMIDIPlayer.currentPosition"
--- private foreign handler objC_AVMIDIPlayerInfo(in pAVPlayerRef as ObjcRetainedId, in pSelector as ObjcId) returns NaturalFloat binds to "objc:AVMIDIPlayer.-valueForKey:"
+private foreign handler objC_AVMIDIPlayerSet(in pAVPlayerRef as ObjcRetainedId, in pValue as ObjcId, in pSelector as ObjcId) returns nothing binds to "objc:AVMIDIPlayer.-setValue:forKey:"
 
 --------------------- Public handler:
 
--- private variable mAVMIDIPlayerInstance as ObjcObject
 private variable mAVMIDIPlayerInstance as ObjcRetainedId
 
 public handler AVMIDIPlayerLoad(in pFileURL as String, in pSoundFontURL as String) returns nothing
@@ -67,6 +64,12 @@ public handler AVMIDIPlayerIsPlaying() returns Boolean
 	end unsafe
 end handler
 
+public handler AVMIDIPlayerSetRate(in pRate as Real) returns nothing
+	unsafe
+    objC_AVMIDIPlayerSet(mAVMIDIPlayerInstance,NumberToNSNumber(pRate),StringToNSString("rate"))
+	end unsafe
+end handler
+
 public handler AVMIDIPlayerDuration() returns String
 	variable tDuration as optional NaturalFloat
 	unsafe
@@ -76,7 +79,7 @@ public handler AVMIDIPlayerDuration() returns String
 	end unsafe
 end handler
 
-public handler AVMIDIPlayerCurrentPosition() returns String
+public handler AVMIDIPlayerGetCurrentPosition() returns String
 	variable tCurrentPosition as NaturalFloat
 	-- variable tNewPosition as NaturalFloat
 	unsafe
