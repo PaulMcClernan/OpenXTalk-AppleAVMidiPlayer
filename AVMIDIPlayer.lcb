@@ -79,6 +79,13 @@ public handler AVMIDIPlayerDuration() returns String
 	end unsafe
 end handler
 
+public handler AVMIDIPlayerSetCurrentPosition(in pNewPosition as Real) returns nothing
+	-- variable tNewPosition as NaturalFloat
+	unsafe
+	objC_AVMIDIPlayerSet(mAVMIDIPlayerInstance,NumberToNSNumber(pNewPosition),StringToNSString("currentPosition"))
+	end unsafe
+end handler
+
 public handler AVMIDIPlayerGetCurrentPosition() returns String
 	variable tCurrentPosition as NaturalFloat
 	-- variable tNewPosition as NaturalFloat
