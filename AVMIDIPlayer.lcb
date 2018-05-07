@@ -11,6 +11,9 @@ metadata svgicon is "M66.43,52.07c-0.71,0.32-1.48,0.56-2.31,0.78c-2.35,0.65-5.44
 
 
 private foreign handler objC_NSURLURLWithString(in pURLString as ObjcId) returns ObjcId binds to "objc:NSURL.+URLWithString:"
+private foreign handler objC_NSURLfileOrDirURLWithPath(in pPathString as ObjcId, in pIsDir as CBool) returns ObjcId binds to "objc:.NSURL.+fileURLWithPath:isDirectory:"
+private foreign handler objC_NSURLfileURLWithPath(in pPathString as ObjcId) returns ObjcId binds to "objc:NSURL.+fileURLWithPath:"
+
 private foreign handler objC_NSErrorAlloc() returns ObjcRetainedId binds to "objc:NSError.+alloc"
 
 private foreign handler objC_AVMIDIPlayerAlloc() returns ObjcRetainedId binds to "objc:AVMIDIPlayer.+alloc"
@@ -28,7 +31,30 @@ private foreign handler objC_AVMIDIPlayerSet(in pAVPlayerRef as ObjcRetainedId, 
 
 private variable mAVMIDIPlayerInstance as ObjcRetainedId
 
-public handler AVMIDIPlayerLoad(in pFileURL as String, in pSoundFontURL as String) returns nothing
+public handler AVMIDIPlayerLoadPaths(in pFilePath as String, in pSoundFontPath as String) returns nothing
+		--- need NSURL objects to pass to AVMIDIplayer
+		variable tFileNSURL as ObjcObject
+		variable tSoundFontNSURL as ObjcObject
+		--- need NSError object to pass to AVMIDIplayer
+		variable tNSError as optional ObjcObject
+		-- variable tIsDir as optional CBool
+		-- put false into tIsDir
+		unsafe
+		put objC_NSURLfileURLWithPath(StringToNSString(pFilePath)) into tFileNSURL
+		-- put objC_NSURLfileURLWithPath(StringToNSString(pFilePath),tIsDir) into tFileNSURL
+
+		 put objC_NSURLfileURLWithPath(StringToNSString(pSoundFontPath)) into tSoundFontNSURL
+		-- put objC_NSURLfileURLWithPath(StringToNSString(pSoundFontPath),tIsDir) into tSoundFontNSURL
+
+     	-- NEED to Add Checking for validity of URLs or the LC Engine will crash when it passes an invalid URL to AVMIDIPlayer!!!
+		-- put objC_NSErrorAlloc() into tNSError
+    	put objC_AVMIDIPlayerAlloc() into mAVMIDIPlayerInstance
+		put objC_AVMIDIPlayer(mAVMIDIPlayerInstance, tFileNSURL ,tSoundFontNSURL, tNSError) into mAVMIDIPlayerInstance
+		objC_AVMIDIPlayerPrepare(mAVMIDIPlayerInstance)
+	end unsafe
+end handler
+
+public handler AVMIDIPlayerLoadURLs(in pFileURL as String, in pSoundFontURL as String) returns nothing
 		--- need NSURL objects to pass to AVMIDIplayer
 		variable tFileNSURL as ObjcObject
 		variable tSoundFontNSURL as ObjcObject
