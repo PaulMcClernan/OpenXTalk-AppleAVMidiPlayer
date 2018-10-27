@@ -1,0 +1,29 @@
+0, 4, 7	Major triad
+0, 3, 7	Minor triad
+0, 4, 8	Augmented triad
+0, 3, 6	Diminished triad
+0, 4, 7, 9	Major sixth chord
+0, 3, 7, 9	Minor sixth chord
+0, 4, 7, 10	Seventh Chord (note the convention to use the Chromatic flattened 7th.)
+0, 4, 7, 11	Major seventh chord
+0, 3, 7, 10	Minor seventh chord
+0, 4, 8, 10	Augmented seventh chord
+0, 4, 8, 11	Augmented-major seventh (major seventh sharp five)
+0, 4, 6, 10	Seventh flat five
+0, 3, 6, 9	Diminished seventh chord
+0, 3, 6, 10	Half-diminished seventh chord
+0, 3, 7, 11	Minor-major seventh chord
+TO ADD
+—————————
+Half-diminished chords without seventh
+INVERSIONS
+EXTENDED CHORDS:
+9ths
+11ths
+13ths
+Added tone chords
+Suspended chords
+“Power Chords”
+Neutral chords
+Supermajor and subminor
+Polychords
