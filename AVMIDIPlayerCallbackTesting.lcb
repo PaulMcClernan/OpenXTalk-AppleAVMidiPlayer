@@ -22,28 +22,93 @@ metadata svgicon is "M66.43,52.07c-0.71,0.32-1.48,0.56-2.31,0.78c-2.35,0.65-5.44
 /**
 START BLOCK
 **/
+type LibraryHandle is Pointer
+
+private variable mNSConcreteGlobalBlock as optional Pointer
+
+constant kRTLD_LAZY    is 1
+private foreign handler OpenLibrary(in pPath as ZStringUTF8, in pFlag as CSInt) returns optional LibraryHandle binds to "dlopen"
+private foreign handler GetSymbolPointer(in pHandle as LibraryHandle, in pSymbol as ZStringUTF8) returns optional Pointer binds to "dlsym"
+private foreign handler CloseLibrary(in pHandle as LibraryHandle) returns CSInt binds to "dlclose"
+
+private unsafe handler EnsureNSConcreteGlobalBlock() returns nothing
+    if mNSConcreteGlobalBlock is not nothing then
+        return
+    end if
+
+    variable tSystem as LibraryHandle
+    put OpenLibrary("libSystem.dylib", kRTLD_LAZY) into tSystem
+    if tSystem is not nothing then
+        put GetSymbolPointer(tSystem, "_NSConcreteGlobalBlock") into mNSConcreteGlobalBlock
+        CloseLibrary(tSystem)
+    end if
+end handler
+
 public foreign type BlockDescriptor binds to "MCAggregateTypeInfo:ffrrr"
 public foreign type Block binds to "MCAggregateTypeInfo:rEErr"
+type BlockPointer is Pointer
 
-private handler type AVMIDIPlayerStopCallbackBlock(in pContext as Pointer) returns nothing
-
+-- MC_DLLEXPORT bool MCHandlerGetFunctionPtr(MCHandlerRef handler, void*& r_func_ptr);
+foreign handler MCHandlerGetFunctionPtr(in pHandler as any, out rPtr as Pointer) returns CBool binds to "<builtin>"
 -- This method returns an block of memory containing the same contents as the provided one.
 -- MC_DLLEXPORT bool MCMemoryAllocateCopy(const void *block, size_t size, void*& r_new_block);
 foreign handler CopyBlockDescriptor(inout pBlock as BlockDescriptor, in pSize as UIntSize, out rNewBlock as Pointer) returns CBool binds to "MCMemoryAllocateCopy"
-
--- MC_DLLEXPORT bool MCHandlerGetFunctionPtr(MCHandlerRef handler, void*& r_func_ptr);
-foreign handler MCHandlerGetFunctionPtr(in pBlockCallback as AVMIDIPlayerStopCallbackBlock, out rPtr as Pointer) returns CBool binds to "<builtin>"
-
 -- This method returns an block of memory containing the same contents as the provided one.
 -- MC_DLLEXPORT bool MCMemoryAllocateCopy(const void *block, size_t size, void*& r_new_block);
-foreign handler CopyBlock(inout pBlock as Block, in pSize as UIntSize, out rNewBlock as Pointer) returns nothing binds to "MCMemoryAllocateCopy"
-
+foreign handler CopyBlock(inout pBlock as Block, in pSize as UIntSize, out rNewBlock as Pointer) returns CBool binds to "MCMemoryAllocateCopy"
 --  This method deletes a fixed size record that was allocated with MCMemoryNew.
 -- MC_DLLEXPORT void MCMemoryDelete(void *p_record);
 foreign handler MCMemoryDelete(in pBlock as Pointer) returns nothing binds to "<builtin>"
 
+private handler type AVMIDIPlayerStopCallbackBlockType(in pBlock as BlockPointer) returns nothing
+
+variable mAVMIDIPlayerStopCallbackBlock as optional BlockPointer
+
 constant kBlockSize is 32
 constant kBlockDescriptorSize is 40
+
+private handler CreateBlockPointerFromHandler(in pHandler as any, out rBlockPtr as optional BlockPointer) returns Boolean
+    unsafe
+        EnsureNSConcreteGlobalBlock()
+
+        variable tFunctionPtr as Pointer
+        if not MCHandlerGetFunctionPtr(pHandler, tFunctionPtr) then
+            return false
+        end if
+
+        variable tBlock as Block
+        variable tBlockDescriptor as BlockDescriptor
+
+        put [0, kBlockSize, nothing, nothing, nothing] into tBlockDescriptor
+
+        variable tBlockDescriptorPointer as Pointer
+        if not CopyBlockDescriptor(tBlockDescriptor, kBlockDescriptorSize, tBlockDescriptorPointer) then
+            return false
+        end if
+
+        put [mNSConcreteGlobalBlock, 0x30000000, 0, tFunctionPtr, tBlockDescriptorPointer] into tBlock
+
+        variable tBlockPtr as BlockPointer
+        if not CopyBlock(tBlock, kBlockSize, tBlockPtr) then
+            MCMemoryDelete(tBlockDescriptorPointer)
+            return false
+        end if
+
+        put tBlockPtr into rBlockPtr
+        return true
+    end unsafe
+end handler
+
+private handler DeleteBlockPointer(in pBlockPointer as BlockPointer)
+    unsafe
+        DeleteBlockDescriptorPointer(pBlockPointer)
+        MCMemoryDelete(pBlockPointer)
+    end unsafe
+end handler
+
+private unsafe handler DeleteBlockDescriptorPointer(inout pBlock as Block)
+    MCMemoryDelete(pBlock[5])
+end handler
 
 private handler CreateFunctionBlock(in pFunction as any, out rBlockPtr as Pointer, out rBlockDescriptorPointer as Pointer) returns nothing
   variable tBlock as Block
@@ -73,13 +138,13 @@ end handler
 --   post "AVMIDIPlayerStopped"
 -- end handler
 
-public handler AVMIDIPlayerStopCallback() returns nothing
+-- public handler AVMIDIPlayerStopCallback() returns nothing
 --   variable tObject as ScriptObject
 --   resolve script object "this stack"
 --   put the result into tObject
    -- send command "AVMIDIPlayerDone" to tObject -- with [1,2,3]
-   post "AVMIDIPlayerStopped" -- to tObject -- with [1,2,3]
-end handler
+--   post "AVMIDIPlayerStopped" -- to tObject -- with [1,2,3]
+-- end handler
 
 --public handler AVMIDIPlayerStopCallback(in pContext as Pointer) returns nothing
 --   variable tObject as ScriptObject
@@ -89,10 +154,21 @@ end handler
 --   post "AVMIDIPlayerStopped" to tObject -- with [1,2,3]
 -- end handler
 
-/**
-END BLOCK
-**/
+-- public handler AVMIDIPlayerStopCallbackHandler(in pBlock as BlockPointer) returns nothing
+public handler AVMIDIPlayerStopCallbackHandler(in pBlock as BlockPointer) returns nothing
+      -- variable tObject as ScriptObject
+      -- resolve script object "this stack"
+      -- put the result into tObject
+     -- send command "AVMIDIPlayerDone" to tObject -- with [1,2,3]
+     -- post "AVMIDIPlayerStopped" to tObject -- with [1,2,3]
+      -- post "AVMIDIPlayerStopped"
+      -- send command "put"
+end handler
 
+/**
+END BLOCK HANDLING
+**/
+variable mAVMIDIPlayerStopCallbackHandlerTypeBlock as optional BlockPointer
 
 private foreign handler objC_NSURLURLWithString(in pURLString as ObjcId) returns ObjcId binds to "objc:NSURL.+URLWithString:"
 private foreign handler objC_NSURLfileOrDirURLWithPath(in pPathString as ObjcId, in pIsDir as CBool) returns ObjcId binds to "objc:.NSURL.+fileURLWithPath:isDirectory:"
@@ -103,7 +179,7 @@ private foreign handler objC_NSErrorAlloc() returns ObjcRetainedId binds to "obj
 private foreign handler objC_AVMIDIPlayerAlloc() returns ObjcRetainedId binds to "objc:AVMIDIPlayer.+alloc"
 private foreign handler objC_AVMIDIPlayer(in pAVMIDIPlayerInstance as ObjcRetainedId, in pFileNSURL as ObjcId, in pSoundFontNSURL as ObjcId, out pNSError as ObjcId) returns ObjcRetainedId binds to "objc:AVMIDIPlayer.-initWithContentsOfURL:soundBankURL:error:"
 private foreign handler objC_AVMIDIPlayerPrepare(in pAVPlayerRef as ObjcRetainedId) returns nothing binds to "objc:AVMIDIPlayer.-prepareToPlay"
-private foreign handler objC_AVMIDIPlayerPlay(in pAVPlayerRef as ObjcRetainedId, in pAVPlayDoneFunc as optional any) returns nothing binds to "objc:AVMIDIPlayer.-play:"
+private foreign handler objC_AVMIDIPlayerPlay(in pAVPlayerRef as ObjcRetainedId, in pAVPlayDoneFuncBlock as optional any) returns nothing binds to "objc:AVMIDIPlayer.-play:"
 private foreign handler objC_AVMIDIPlayerStop(in pAVPlayerRef as ObjcRetainedId) returns nothing binds to "objc:AVMIDIPlayer.-stop"
 private foreign handler objC_AVMIDIPlayerPlaying(in pAVPlayerRef as ObjcRetainedId) returns CBool binds to "objc:AVMIDIPlayer.isPlaying"
 private foreign handler objC_AVMIDIPlayerRate(in pAVPlayerRef as ObjcRetainedId, in pRate as ObjcId) returns nothing binds to "objc:AVMIDIPlayer.rate"
@@ -205,14 +281,17 @@ public handler AVMIDIPlayerPlay() returns nothing
 end handler
 
 public handler AVMIDIPlayerPlayWithCallback() returns nothing
-   variable tAVMIDIPlayerCompletionHandler as optional pointer
-	unsafe
-	  variable tBlockPtr as Pointer
-	  variable tBlockDescriptionPointer as Pointer
-	  CreateFunctionBlock(AVMIDIPlayerStopCallback, tBlockPtr, tBlockDescriptionPointer)
-	  objC_AVMIDIPlayerPlay(mAVMIDIPlayerInstance, AVMIDIPlayerStopCallback)
-	  --objC_AVMIDIPlayerPlay(mAVMIDIPlayerInstance, tAVMIDIPlayerCompletionHandler)
-	end unsafe
+   variable tResult as Boolean
+   if mAVMIDIPlayerStopCallbackHandlerTypeBlock is nothing then
+     unsafe
+      put CreateBlockPointerFromHandler(AVMIDIPlayerStopCallbackHandler, mAVMIDIPlayerStopCallbackHandlerTypeBlock) into tResult
+      objC_AVMIDIPlayerPlay(mAVMIDIPlayerInstance, mAVMIDIPlayerStopCallbackHandlerTypeBlock)
+     end unsafe
+   else
+      unsafe
+    objC_AVMIDIPlayerPlay(mAVMIDIPlayerInstance, mAVMIDIPlayerStopCallbackHandlerTypeBlock)
+    end unsafe
+   end if
 end handler
 
 /**
