@@ -32,26 +32,22 @@ private foreign handler objC_NSURLfileURLWithPath(in pPathString as ObjcId) retu
 private foreign handler objC_NSErrorAlloc() returns ObjcRetainedId binds to "objc:NSError.+alloc"
 
 private foreign handler objC_AVMIDIPlayerAlloc() returns ObjcRetainedId binds to "objc:AVMIDIPlayer.+alloc"
-private foreign handler objC_AVMIDIPlayer(in pAVMIDIPlayerInstance as ObjcRetainedId, in pFileNSURL as ObjcId, in pSoundFontNSURL as ObjcId, out pNSError as ObjcId) returns ObjcRetainedId binds to "objc:AVMIDIPlayer.-initWithContentsOfURL:soundBankURL:error:"
-private foreign handler objC_AVMIDIPlayerPrepare(in pAVPlayerRef as ObjcRetainedId) returns nothing binds to "objc:AVMIDIPlayer.-prepareToPlay"
-private foreign handler objC_AVMIDIPlayerPlay(in pAVPlayerRef as ObjcRetainedId, in pAVPlayDone as optional pointer) returns nothing binds to "objc:AVMIDIPlayer.-play:"
-private foreign handler objC_AVMIDIPlayerStop(in pAVPlayerRef as ObjcRetainedId) returns nothing binds to "objc:AVMIDIPlayer.-stop"
-private foreign handler objC_AVMIDIPlayerPlaying(in pAVPlayerRef as ObjcRetainedId) returns CBool binds to "objc:AVMIDIPlayer.isPlaying"
-private foreign handler objC_AVMIDIPlayerRate(in pAVPlayerRef as ObjcRetainedId, in pRate as ObjcId) returns nothing binds to "objc:AVMIDIPlayer.rate"
-private foreign handler objC_AVMIDIPlayerDuration(in pAVPlayerRef as ObjcRetainedId) returns NaturalFloat binds to "objc:AVMIDIPlayer.duration"
-private foreign handler objC_AVMIDIPlayerCurrentPosition(in pAVPlayerRef as ObjcRetainedId) returns NaturalFloat binds to "objc:AVMIDIPlayer.currentPosition"
-private foreign handler objC_AVMIDIPlayerSet(in pAVPlayerRef as ObjcRetainedId, in pValue as ObjcId, in pSelector as ObjcId) returns nothing binds to "objc:AVMIDIPlayer.-setValue:forKey:"
+private foreign handler objC_AVMIDIPlayer(in pAVMIDIPlayerInstance as ObjcRetainedId, in pFileNSURL as ObjcId, in pSoundFontNSURL as ObjcId, out pNSError as ObjcId) returns ObjcId binds to "objc:AVMIDIPlayer.-initWithContentsOfURL:soundBankURL:error:"
+private foreign handler objC_AVMIDIPlayerPrepare(in pAVPlayerRef as ObjcId) returns nothing binds to "objc:AVMIDIPlayer.-prepareToPlay"
+private foreign handler objC_AVMIDIPlayerPlay(in pAVPlayerRef as ObjcId, in pAVPlayDone as optional pointer) returns nothing binds to "objc:AVMIDIPlayer.-play:"
+private foreign handler objC_AVMIDIPlayerStop(in pAVPlayerRef as ObjcId) returns nothing binds to "objc:AVMIDIPlayer.-stop"
+private foreign handler objC_AVMIDIPlayerPlaying(in pAVPlayerRef as ObjcId) returns CBool binds to "objc:AVMIDIPlayer.isPlaying"
+private foreign handler objC_AVMIDIPlayerRate(in pAVPlayerRef as ObjcId, in pRate as ObjcId) returns nothing binds to "objc:AVMIDIPlayer.rate"
+private foreign handler objC_AVMIDIPlayerDuration(in pAVPlayerRef as ObjcId) returns NaturalFloat binds to "objc:AVMIDIPlayer.duration"
+private foreign handler objC_AVMIDIPlayerCurrentPosition(in pAVPlayerRef as ObjcId) returns NaturalFloat binds to "objc:AVMIDIPlayer.currentPosition"
+private foreign handler objC_AVMIDIPlayerSet(in pAVPlayerRef as ObjcId, in pValue as ObjcId, in pSelector as ObjcId) returns nothing binds to "objc:AVMIDIPlayer.-setValue:forKey:"
 
 --------------------- Public handler:
-
--- private variable mAVMIDIPlayerInstance as ObjcRetainedId
 private variable mAVMIDIPlayerInstance as ObjcId
 private variable sAVMIDIPlayerStopCallbackHandlerPtr as optional ObjcBlockPointer
 private variable sTarget as ScriptObject
 
 public handler AVMIDIPlayerStopCallback(in pBlock as ObjcBlockPointer)
-  -- type MCRunloopActionCallback is Pointer
-  -- type MCRunloopActionRef is Pointer
   --  foreign handler MCEngineAddRunloopAction(in pCallback as Pointer, in pContext as optional Pointer, out rAction as Pointer) returns CBool
   --  foreign handler MCEngineRemoveRunloopAction(in pAction as Pointer) returns nothing
   --  foreign handler MCEngineRunloopWait() returns CBool
@@ -60,6 +56,7 @@ public handler AVMIDIPlayerStopCallback(in pBlock as ObjcBlockPointer)
    -- variable tObject as ScriptObject
    -- resolve script object "this stack"
    -- put the result into tObject
+
    -- send command "AVMIDIPlayerDone" to tObject -- with [1,2,3]
    -- variable tCurrentPosition as NaturalFloat
 	-- variable tCurrentPosition as Number
