@@ -4,11 +4,11 @@ This Library is a wrapper for macOS & iOS AVIMIDIPlayer, useful for playing MIDI
 Description:
 This Library is a wrapper for macOS & iOS AVIMIDIPlayer.
 
->*Note:* This library is MIT licensed (permissive).
+>*Note:* This library is provided as-is under GPL3 license.
 > Please share and share a like.
 */
 
-library community.avmidiplay.paulmcclernan
+library org.oxt.avmidiplay.paulmcclernan
 
 use com.livecode.engine
 use com.livecode.foreign
