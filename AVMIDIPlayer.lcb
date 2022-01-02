@@ -8,7 +8,7 @@ This Library is a wrapper for macOS & iOS AVIMIDIPlayer.
 > Please share and share a like.
 */
 
-library org.oxt.avmidiplay.paulmcclernan
+library org.openxtalk.avmidiplay.paulmcclernan
 
 use com.livecode.engine
 use com.livecode.foreign
